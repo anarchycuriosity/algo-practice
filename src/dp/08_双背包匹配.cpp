@@ -1,7 +1,8 @@
+#include <string.h>
+
+#include <cmath>
 #include <iostream>
 #include <vector>
-#include <cmath>
-#include <string.h>
 // 拼错好多地方，这大概是答案不理想的原因之一，比如把[]塞到()里面
 // 结束条件写错，应该是到n+1的时候退出
 using namespace std;
@@ -37,7 +38,7 @@ int main()
     // ll j = 1;
     for (ll k = 1; k <= n; k++)
     {
-        cin >> w1[k] >> v1[k]; // 这里输入错了，曾经写成v1
+        cin >> w1[k] >> v1[k];  // 这里输入错了，曾经写成v1
         back1 += w1[k];
         for (ll curb = back1; curb >= w1[k]; curb--)
         {
@@ -75,7 +76,8 @@ int main()
     //     }
     //     back1 += w1[i];
     //     back2 += w2[j];
-    //     for (ll curb = back1; curb >= w1[i]; curb--) // 因为没有重量限制，也许这里应该是到0?好吧不对,有种隐藏重量限制的感觉?大概可以理解，因为需要有curb - w的取舍
+    //     for (ll curb = back1; curb >= w1[i]; curb--) //
+    //     因为没有重量限制，也许这里应该是到0?好吧不对,有种隐藏重量限制的感觉?大概可以理解，因为需要有curb - w的取舍
     //     {
     //         dp1[curb] = max(dp1[curb], dp1[curb - w1[i]] + v1[i]);
     //     }
@@ -126,7 +128,7 @@ int main()
     ll ans = 0;
     for (ll curb = 0; curb <= back1; curb++)
     {
-        ans = max(ans, dp1[curb] + dp2[curb]); // 天啊，如果数据无效就是-无穷
+        ans = max(ans, dp1[curb] + dp2[curb]);  // 天啊，如果数据无效就是-无穷
     }
     cout << ans;
 }
