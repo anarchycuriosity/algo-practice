@@ -21,18 +21,20 @@ int main()
     std::cout << std::fixed;
     std::cout << std::setprecision(2);  // 参数设置输出小数点后两位，忘记了（笑哭）
     std::vector<double> ans;
-    for (int i = -100; i <= 100; i++)
+    for (int i = -100; i < 100; i++)
     {
         l = i;
         r = i + 1;
         y1 = cal(l);
         y2 = cal(r);
-        if (!y1)
+        // if (!y1)
+        if (std::abs(y1) < 1e-6)
         {
             ans.push_back(l);
             // std::cout << " " << l;
             count++;
         }
+        // 这里容易出问题的是，应该考虑误差问题，因为是浮点数
         if (count == 3)
         {
             break;
@@ -40,10 +42,16 @@ int main()
         // 二分的依据是零点定理
         if (y1 * y2 < 0)
         {
-            while (r - l >= 0.001)
+            // 只有判断0点存在可以直接乘，但是二分中的判断不能直接乘
+            //  因为无法判断在这个区间内就是单调的
+            while (r - l >= 1e-6)  // 如果给多一点精度呢
             {
                 m = (l + r) / 2;
-                if (cal(l) <= 0)  // 我不太确定这里是否要取等
+                // 二次逼近的过程中会越来越接近0
+                // if (cal(l) * cal(m) > 0)  // 如果左*中大于0，说明根在右边
+                bool l_posi = cal(l) > 0;
+                bool m_posi = cal(m) > 0;
+                if (l_posi == m_posi)
                 {
                     l = m;
                 }
@@ -56,6 +64,11 @@ int main()
             count++;
             ans.push_back(m);
             // std::cout << m << " ";
+            // 这个判断在这里要写两次
+            if (count == 3)
+            {
+                break;
+            }
         }
     }
     std::sort(ans.begin(), ans.end());
