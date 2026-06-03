@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-int arr[1000][1000];
+int arr[1001][1001];
 struct point
 {
     int degree = 0;
@@ -15,6 +15,7 @@ int main()
         int start, end;
         std::cin >> start >> end;
         arr[start][end] = 1;
+        arr[end][start] = 1;
     }
     std::vector<point> points;
     for (int i = 1; i <= n; i++)
@@ -44,6 +45,10 @@ int main()
                     std::cout << points[i].edges[j] << " ";
                 }
                 std::cout << std::endl;
+            }
+            else
+            {
+                std::cout << 0 << std::endl;
             }
         }
     }
