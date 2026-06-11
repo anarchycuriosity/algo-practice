@@ -40,10 +40,11 @@ class min_heap
     void up_shift(int cur)
     {
         // while循环先考虑边界，结束条件在中间break即可
-        while (cur > 1)
+        while (cur > 1)  // 优先保证首先要有一个父亲和它比
         {
-            int parent = cur >> 1;
-            if (tree[cur] > tree[parent])
+            int parent = cur >> 1;         // 左右孩子的逻辑都一致,因为右移动1之后都是他们的父亲节点
+            if (tree[cur] < tree[parent])  // 如果是大于号就是越大的元素越往上提,现在是小根堆
+            // 所以应该是越小的元素越往上提
             {
                 std::swap(tree[cur], tree[parent]);
                 cur = parent;
@@ -60,27 +61,106 @@ class min_heap
     // size是一个变量
     void down_shift(int cur)
     {
-        while ((cur >> 1) <= heap_size)
+        while ((cur << 1) <= heap_size)  // 为什么只判断左孩子呢:因为要保证至少有一个孩子跟它比,不能额外判断右孩子
+        // 否则当只有一个左孩子的时候它根本就没有比较的机会
         {
-            int lchild = cur >> 1;
+            int lchild = cur << 1;
             int rchild = lchild + 1;
             // 非常要注意，虽然是先落左孩子再落右孩子，但是这是针对当级的父子关系来说
             // 叶子节点的数据不一定就是最小的
             /*
             我们来构造一个完全合法的小根堆。现在堆里有 6 个元素，数组形态为：[empty, 10, 20, 30, 100, 110, 40]。
 
-    我们先在脑海里把它画成一棵完美的完全二叉树：
+            我们先在脑海里把它画成一棵完美的完全二叉树：
 
-    根节点是 10
+            根节点是 10
 
-    它的左孩子是 20，右孩子是 30
+            它的左孩子是 20，右孩子是 30
 
-    20 的左孩子是 100，右孩子是 110
+            20 的左孩子是 100，右孩子是 110
 
-    30 的左孩子是 40（这就是当前 heap_size 的位置！）*/
+            30 的左孩子是 40（这就是当前 heap_size 的位置！）*/
             // 二叉树只保证相对性，最大值不一定就在结尾
             // 因为右孩子的序列本来就比左孩子大1
             // 这和插入顺序也有关系，比如这个树就是先插入100和110再插入40
+            // 所以当你选择heap_size位置的元素它并不一定就是从左边冒出来的
+            // 一定是先处理左孩子，因为如果一个根它有一个孩子的时候，它一定是先有左孩子
+            // 所以在你的想象逻辑里面无论是下沉or上浮往往都是在左侧
+            // 可以说左侧的引力更大一点
+
+            int tar = cur;  // 这里tar的设定很巧妙
+            // 这涉及一个对于tar值抉择的过程,左右孩子是平权的,可能右孩子要小于左孩子
+            if (tree[lchild] < tree[tar])
+            {
+                tar = lchild;
+            }
+            if (rchild <= heap_size && tree[rchild] < tree[tar])  // 在这里额外判断size
+            {
+                tar = rchild;
+            }
+
+            if (cur != tar)
+            {
+                std::swap(tree[tar], tree[cur]);
+                cur = tar;
+            }
+            else
+            {
+                break;  // 下沉结束,卡在一个位置
+            }
         }
     }
+
+   public:
+    // 不要忘记构造函数,需要把heapsize设置为0
+    // capacity和heapsize是不一样的概念,右边需要有有效元素
+    min_heap(int capacity)
+    {
+        tree.resize(capacity + 1);
+        heap_size = 0;
+    }
+    void pop()
+    {
+        tree[1] = tree[heap_size];
+        heap_size--;
+        down_shift(1);
+    }
+    int top() { return tree[1]; }
+
+    void push(int num)
+    {
+        heap_size++;
+        tree[heap_size] = num;
+        up_shift(heap_size);
+    }
 };
+int main()
+{
+    int times = 0;
+    std::cin >> times;
+    std::vector<int> ans;
+    min_heap q(times + 1);
+    while (times--)
+    {
+        int op;
+        std::cin >> op;
+        if (op == 1)
+        {
+            int num;
+            std::cin >> num;
+            q.push(num);
+        }
+        else if (op == 2)
+        {
+            ans.push_back(q.top());
+        }
+        else
+        {
+            q.pop();
+        }
+    }
+    for (int num : ans)
+    {
+        std::cout << num << "\n";
+    }
+}
