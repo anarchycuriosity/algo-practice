@@ -25,16 +25,17 @@ struct Interval
 };
 bool comp(const Interval& x, const Interval& y)
 {
-    if (x.l != y.l)
-    {
-        return x.l < y.l;
-    }
+    // if (x.l != y.l)
+    // {
+    //     return x.l < y.l;
+    // }
     // else
     // {
     //     return x.r < y.r;
     // }
+    return x.l < y.l;
 }
-struct comp
+struct pq_compare
 {
     bool operator()(const Interval& x, const Interval& y) const { return x.r > y.r; }
 };
@@ -57,31 +58,33 @@ int main()
     vector<int> ans;
     int count = 0;
     int i = 0;
+    priority_queue<Interval, vector<Interval>, pq_compare> waited;
     // i 只往右走、每轮只扫描新解锁的人”这个做法，依赖于数组已经按照 l 单调排序,但是r的排序不是很重要
     while (true)
     {
         // if (intervals[i].l > count || i == n)顺序很重要,不然会短路,这是反面教材
         // int i = 0;
 
-        // 不能简单的决定拿不拿,必须建立一个候选池子,而这个候选池子能够自己整理,i扫过了就可以进去,而不要让i扫很多次
+        // 不能简单的决定拿不拿,必须建立一个每次的候选池子,而这个候选池子能够自己整理,i扫过了就可以进去,而不要让i扫很多次
         // 没错就是小根堆
-        ll emergen = LLONG_MAX;
-        ll tar = -1;
         while (i < n && intervals[i].l <= count)
         {
-            if (emergen > intervals[i].r)
-            {
-                emergen = min(emergen, intervals[i].r);
-                tar = intervals[i].ind;
-            }
+            waited.push(intervals[i]);
             i++;
         }
-        if (tar == -1)
+        // 注意这两个while不一定是同一层执行,而是count++后可能执行
+        // 因为这是候选池,而不是实际池子,所以是可以踢人的
+        while (!waited.empty() && waited.top().r < count)
+        {
+            waited.pop();
+        }
+        if (waited.empty())
         {
             break;
         }
+        ans.push_back(waited.top().ind);
         count++;
-        ans.push_back(tar);
+        waited.pop();
 
         // 因为排序好了,找到的第一个肯定是最急的
     }
