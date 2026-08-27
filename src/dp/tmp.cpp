@@ -3,80 +3,141 @@ using namespace std;
 
 const int INF = 1e9;
 
+struct Action
+{
+    int rise;
+    int fall;
+};
+
 int main()
 {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int n;
-    cin >> n;
+    int n, m, k;
+    cin >> n >> m >> k;
 
-    vector<int> a(2 * n + 1);
+    vector<Action> actions(n);
 
-    // 复制数组，断环成链
+    for (int i = 0; i < n; i++)
+    {
+        cin >> actions[i].rise >> actions[i].fall;
+    }
+
+    // 没有管道时：
+    // 0 < j < m + 1
+    // 所有 1~m 都合法
+    vector<int> low(n + 1, 0);
+    vector<int> high(n + 1, m + 1);
+    vector<bool> hasPipe(n + 1, false);
+
+    for (int i = 0; i < k; i++)
+    {
+        int p, l, h;
+        cin >> p >> l >> h;
+
+        low[p] = l;
+        high[p] = h;
+        hasPipe[p] = true;
+    }
+
+    /*
+        dp[i][j]:
+        到达横坐标 i、高度 j 的最少点击次数
+    */
+    vector<vector<int>> dp(n + 1, vector<int>(m + 1, INF));
+
+    // 初始可以从任意合法高度出发
+    for (int j = 1; j <= m; j++)
+    {
+        dp[0][j] = 0;
+    }
+
+    int passed = 0;
+
     for (int i = 1; i <= n; i++)
     {
-        cin >> a[i];
-        a[i + n] = a[i];
-    }
+        int x = actions[i - 1].rise;
+        int y = actions[i - 1].fall;
 
-    // 前缀和
-    vector<int> prefix(2 * n + 1, 0);
+        // ------------------------
+        // 1. 点击，上升
+        // ------------------------
 
-    for (int i = 1; i <= 2 * n; i++)
-    {
-        prefix[i] = prefix[i - 1] + a[i];
-    }
-
-    // dpMin[l][r]：
-    // 把区间 [l,r] 合并成一堆的最小代价
-    //
-    // dpMax[l][r]：
-    // 把区间 [l,r] 合并成一堆的最大代价
-    vector<vector<int>> dpMin(2 * n + 1, vector<int>(2 * n + 1, INF));
-
-    vector<vector<int>> dpMax(2 * n + 1, vector<int>(2 * n + 1, 0));
-
-    // 一堆本来就是一堆，不需要合并
-    for (int i = 1; i <= 2 * n; i++)
-    {
-        dpMin[i][i] = 0;
-        dpMax[i][i] = 0;
-    }
-
-    // 枚举区间长度
-    for (int len = 2; len <= n; len++)
-    {
-        // 枚举左端点
-        for (int l = 1; l + len - 1 <= 2 * n; l++)
+        for (int j = x + 1; j <= m; j++)
         {
-            int r = l + len - 1;
+            // 这一秒第一次点击
+            dp[i][j] = min(dp[i][j], dp[i - 1][j - x] + 1);
 
-            // 整个区间的石头数量
-            int sum = prefix[r] - prefix[l - 1];
+            // 这一秒之前已经点击过，再点一次
+            dp[i][j] = min(dp[i][j], dp[i][j - x] + 1);
+        }
 
-            // 枚举最后一次合并的位置
-            for (int k = l; k < r; k++)
+        // ------------------------
+        // 2. 撞到天花板 m
+        // ------------------------
+
+        for (int j = max(1, m - x + 1); j <= m; j++)
+        {
+            // 从上一列直接点到天花板
+            dp[i][m] = min(dp[i][m], dp[i - 1][j] + 1);
+
+            // 当前这一秒已经点过，再点到天花板
+            dp[i][m] = min(dp[i][m], dp[i][j] + 1);
+        }
+
+        // ------------------------
+        // 3. 一次都不点击，下降
+        // ------------------------
+
+        for (int j = 1; j + y <= m; j++)
+        {
+            dp[i][j] = min(dp[i][j], dp[i - 1][j + y]);
+        }
+
+        // ------------------------
+        // 4. 管道过滤
+        // ------------------------
+
+        bool alive = false;
+
+        for (int j = 1; j <= m; j++)
+        {
+            if (j <= low[i] || j >= high[i])
             {
-                dpMin[l][r] = min(dpMin[l][r], dpMin[l][k] + dpMin[k + 1][r] + sum);
-
-                dpMax[l][r] = max(dpMax[l][r], dpMax[l][k] + dpMax[k + 1][r] + sum);
+                dp[i][j] = INF;
             }
+
+            if (dp[i][j] < INF)
+            {
+                alive = true;
+            }
+        }
+
+        // 已经没有任何高度能活下来
+        if (!alive)
+        {
+            cout << 0 << '\n';
+            cout << passed << '\n';
+            return 0;
+        }
+
+        // 成功通过当前位置的管道
+        if (hasPipe[i])
+        {
+            passed++;
         }
     }
 
-    int minAns = INF;
-    int maxAns = 0;
+    int ans = INF;
 
-    // 枚举从哪里把圆环剪开
-    for (int i = 1; i <= n; i++)
+    for (int j = 1; j <= m; j++)
     {
-        minAns = min(minAns, dpMin[i][i + n - 1]);
-        maxAns = max(maxAns, dpMax[i][i + n - 1]);
+        ans = min(ans, dp[n][j]);
     }
 
-    cout << minAns << '\n';
-    cout << maxAns << '\n';
+    cout << 1 << '\n';
+    cout << ans << '\n';
 
     return 0;
 }
