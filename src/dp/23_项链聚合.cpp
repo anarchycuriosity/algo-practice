@@ -39,7 +39,7 @@ int main()
         jews[i + N].butt = jews[i].butt;
         jews[i + N].head = jews[i].head;
     }
-    // 没有聚合能量为0
+    // 没有聚合则能量为0
     // vector<vector<Unit>> dp(cpn + 1, vector<Unit>(cpn + 1));
     // vector<vector<Jew>> dp(cpn + 1, vector<Jew>(cpn + 1));
     vector<vector<ll>> dp(cpn + 1, vector<ll>(cpn + 1, 0));
