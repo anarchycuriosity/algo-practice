@@ -1,91 +1,85 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+struct Edge
+{
+    int to;
+    int w;
+};
+
 int main()
 {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int n;
-    cin >> n;
+    int n, m, s;
+    cin >> n >> m >> s;
 
-    vector<int> to(n + 1);
-    vector<int> indegree(n + 1, 0);
+    vector<vector<Edge>> graph(n + 1);
 
-    for (int i = 1; i <= n; i++)
+    for (int i = 0; i < m; i++)
     {
-        cin >> to[i];
-        indegree[to[i]]++;
+        int u, v, w;
+        cin >> u >> v >> w;
+
+        graph[u].push_back({v, w});
     }
 
-    queue<int> q;
-    for (int i = 1; i <= n; i++)
+    const long long INF = (1LL << 60);
+
+    vector<long long> dist(n + 1, INF);
+
+    // priority_queue 里存：
+    // {当前距离, 点编号}
+    //
+    // greater<pair<...>> 使它变成小根堆
+    priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<pair<long long, int>>> pq;
+
+    dist[s] = 0;
+    pq.push({0, s});
+
+    while (!pq.empty())
     {
-        if (indegree[i] == 0)
+        auto [d, u] = pq.top();
+        pq.pop();
+
+        // 这是一个已经过期的状态
+        if (d != dist[u])
         {
-            q.push(i);
+            continue;
         }
-    }
 
-    // 保存所有被删除的环外节点
-    vector<int> order;
-
-    while (!q.empty())
-    {
-        int u = q.front();
-        q.pop();
-
-        order.push_back(u);
-
-        int v = to[u];
-        indegree[v]--;
-
-        if (indegree[v] == 0)
+        // 用 u 去更新它能到达的所有点
+        for (auto edge : graph[u])
         {
-            q.push(v);
-        }
-    }
+            int v = edge.to;
+            int w = edge.w;
 
-    vector<int> ans(n + 1, 0);
-    vector<bool> vis(n + 1, false);
-
-    // 此时 indegree[i] > 0 的点全部属于环
-    for (int i = 1; i <= n; i++)
-    {
-        if (indegree[i] > 0 && !vis[i])
-        {
-            // 先算这个环的长度
-            int len = 0;
-            int cur = i;
-
-            do
+            // 松弛
+            if (dist[v] > dist[u] + w)
             {
-                vis[cur] = true;
-                len++;
-                cur = to[cur];
-            } while (cur != i);
+                dist[v] = dist[u] + w;
 
-            // 环上的所有点答案都是环长
-            cur = i;
-
-            do
-            {
-                ans[cur] = len;
-                cur = to[cur];
-            } while (cur != i);
+                pq.push({dist[v], v});
+            }
         }
-    }
-
-    // 倒着处理被删掉的节点
-    for (int i = (int)order.size() - 1; i >= 0; i--)
-    {
-        int u = order[i];
-        ans[u] = ans[to[u]] + 1;
     }
 
     for (int i = 1; i <= n; i++)
     {
-        cout << ans[i] << '\n';
+        if (dist[i] == INF)
+        {
+            cout << INT_MAX;
+        }
+        else
+        {
+            cout << dist[i];
+        }
+
+        if (i != n)
+        {
+            cout << ' ';
+        }
     }
 
     return 0;
